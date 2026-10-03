@@ -8,6 +8,8 @@ A static Chinese-language learning site for grades 3–4, based on the supplied 
 - Original PNG notebooks with a full-resolution viewer.
 - Four-step worked examples and one optional extension exercise per lesson.
 - Seven review groups with two 10-question test papers each: 140 questions with scoring and explanations.
+- Full-course A/B/C papers with 25 questions each and increasing difficulty.
+- Seven original image worksheets with individual or combined A4 printing and PNG downloads.
 - Responsive layout, keyboard navigation and reduced-motion support.
 
 ## Local preview

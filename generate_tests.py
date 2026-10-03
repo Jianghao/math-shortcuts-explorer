@@ -113,6 +113,46 @@ assert len(papers)==14 and sum(len(p['questions']) for p in papers)==140
 for p in papers:
     assert len({q['prompt'] for q in p['questions']})==10
     assert set(q['lesson'] for q in p['questions'])==set(range(p['start'],p['end']+1))
+for letter,hard,index in [('a',False,4),('b',True,3)]:
+    items=[question(lesson,hard,index) for lesson in range(1,21)]
+    items += [question(lesson,hard,2) for lesson in [4,9,12,17,20]]
+    papers.append(dict(id=f'final-{letter}',comprehensive=True,level=1 if letter=='a' else 2,start=1,end=20,name=f'{letter.upper()}卷 · '+('基础综合' if letter=='a' else '进阶综合'),questions=items))
+
+# C emphasizes combining methods, inverse problems and checking conditions.
+c=[]
+def cq(lesson,prompt,answer,explanation):
+    c.append(dict(lesson=lesson,prompt=prompt,answer=number(answer),explanation=explanation))
+cq(1,'398 + 597 + 205 = ?',398+597+205,'398补2成400，597补3成600，从205拿出5，得到400+600+200=1200。')
+cq(2,'1003 − □ = 398，□里填几？',1003-398,'减数=被减数−差。1003−398=(1003+2)−400=605。')
+cq(3,'(931 − 139) − (842 − 248) = ?',(931-139)-(842-248),'两组都是三位颠倒数：(9−1)×99−(8−2)×99=792−594=198。')
+cq(4,'从48到72的所有整数相加，再减去60，结果是多少？',sum(range(48,73))-60,'共25个数，首尾和120。25×120÷2=1500，再减60，得1440。')
+cq(5,'每支笔5元，买37支，用200元付款，找回多少元？（只填数字）',200-37*5,'37×5=370÷2=185元；200−185=15元。')
+cq(6,'68 × 99 + 68 = ?',68*99+68,'68×99=68×100−68，再加68，正好抵消，结果6800。')
+cq(7,'一个整数除以5，商是57，余数是4。这个整数是多少？',57*5+4,'被除数=商×除数+余数：57×5+4=285+4=289。')
+cq(8,'17 × 36 + 17 × 24 = ?',17*36+17*24,'分别算也可以；共同的17可以提出，17×(36+24)=17×60=1020。')
+cq(9,'□ × 11 = 858，□里填几？',858//11,'从乘11的结构检查：78×11，中间7+8=15，进位后得到858，所以填78。')
+cq(10,'71 × 61 − 41 × 31 = ?',71*61-41*31,'个位都是1。71×61=4331；41×31=1271；4331−1271=3060。')
+cq(11,'46 × 25 + 54 × 25 = ?',46*25+54*25,'共同乘25，可以先把46和54凑成100：100×25=2500。')
+cq(12,'81 × 89 − 71 × 79 = ?',81*89-71*79,'同头尾合十：81×89=7209，71×79=5609；相减为1600。注意尾积都写09。')
+cq(13,'91 × 99 − 82 × 44 = ?',91*99-82*44,'合十数乘重复数：91×99=9009，82×44=3608；9009−3608=5401。')
+cq(14,'91 × 11 + 82 × 22 = ?',91*11+82*22,'两组都头合十尾相同。91×11=1001；82×22=1804；合计2805。')
+cq(15,'89 × 87 = ?（补数积超过100，要正确合并）',89*87,'补数11、13；(89−13)×100+11×13=7600+143=7743，不能把76和143直接连写。')
+cq(16,'87 × 73 + 7 × 7 = ?',87*73+7*7,'87和73围绕80对称：80×80−7×7，再加7×7，得到6400。')
+cq(17,'999 × 11 − 789 × 11 = ?',999*11-789*11,'可以分别处理连续进位；也可以先算(999−789)×11=210×11=2310。')
+cq(18,'356 ÷ 25 + 144 ÷ 25 = ?',D(356)/25+D(144)/25,'同除25，先合并：500÷25=500×4÷100=20。')
+cq(19,'29.96 + 30.04 + 29.87 + 30.13 = ?',sum(map(D,['29.96','30.04','29.87','30.13'])),'四个数都凑成30，差值−0.04、+0.04、−0.13、+0.13抵消，结果120。')
+cq(20,'102.36 − 59.97 − 19.99 = ?',D('102.36')-D('59.97')-D('19.99'),'先减60，加回0.03；再减20，加回0.01：102.36−60−20+0.04=22.40。')
+cq(4,'从35到54的所有整数的和是890。去掉最小和最大的数，余下的和是多少？',sum(range(36,54)),'去掉35和54：890−35−54=801；也可用18×(36+53)÷2。')
+cq(12,'同头尾合十的方法可直接用于哪一个算式？填编号：1. 43×47；2. 43×48；3. 43×57。',1,'只有43×47满足十位相同、个位和为10。先看条件再用口诀。')
+cq(16,'平方差的方法，以60为中间数且两边距离相同，可直接用于哪一个？填编号：1. 68×51；2. 67×53；3. 66×55。',2,'67和53离60都是7。68和51、66和55两边的距离不同。')
+cq(18,'□ ÷ 25 = 14.24，□里填几？',D('14.24')*25,'倒过来乘25：14.24×100÷4=1424÷4=356。')
+cq(20,'□ − 43.98 = 42.54，□里填几？',D('43.98')+D('42.54'),'被减数=差+减数。42.54+43.98=42.54+44−0.02=86.52。')
+assert len(c)==25
+papers.append(dict(id='final-c',comprehensive=True,level=3,start=1,end=20,name='C卷 · 思维挑战',questions=c))
+for p in papers:
+    assert len(p['questions'])==(25 if p.get('comprehensive') else 10)
+    if p.get('comprehensive'):
+        assert set(q['lesson'] for q in p['questions'])==set(range(1,21))
 destination=Path(__file__).resolve().parent/'docs'/'tests-data.json'
 destination.write_text(json.dumps(papers,ensure_ascii=False,indent=2),encoding='utf-8')
-print('14 test papers, 140 questions; shortcut arithmetic and lesson coverage verified.')
+print('14 grouped papers + 3 comprehensive papers; 215 questions; all 20 lessons covered in each comprehensive paper.')

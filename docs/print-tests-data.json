@@ -1,0 +1,44 @@
+[
+  {
+    "name": "第01～03课",
+    "src": "assets/print-tests/test_01-03.png",
+    "width": 1055,
+    "height": 1491
+  },
+  {
+    "name": "第04～06课",
+    "src": "assets/print-tests/test_04-06.png",
+    "width": 1055,
+    "height": 1491
+  },
+  {
+    "name": "第07～09课",
+    "src": "assets/print-tests/test_07-09.png",
+    "width": 1055,
+    "height": 1491
+  },
+  {
+    "name": "第10～12课",
+    "src": "assets/print-tests/test_10-12.png",
+    "width": 1055,
+    "height": 1491
+  },
+  {
+    "name": "第13～15课",
+    "src": "assets/print-tests/test_13-15.png",
+    "width": 1055,
+    "height": 1491
+  },
+  {
+    "name": "第16～18课",
+    "src": "assets/print-tests/test_16-18.png",
+    "width": 1055,
+    "height": 1491
+  },
+  {
+    "name": "第19～20课",
+    "src": "assets/print-tests/test_19-20.png",
+    "width": 1055,
+    "height": 1491
+  }
+]

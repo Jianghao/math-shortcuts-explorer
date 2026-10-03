@@ -62,8 +62,10 @@ function renderLesson(l){
 }
 function setStep(n){currentStep=n;const steps=walkthroughs[currentLesson.number-1];const expression=document.querySelector('#step-expression');expression.textContent=steps[n][0];expression.classList.remove('animate');void expression.offsetWidth;expression.classList.add('animate');document.querySelector('#step-note').textContent=steps[n][1];document.querySelector('#step-back').disabled=n===0;document.querySelector('#step-next').textContent=n===3?'再看一次':'下一步';document.querySelector('#step-progress').innerHTML=steps.map((_,i)=>`<span class="${i<=n?'active':''}"></span>`).join('');document.querySelector('#step-progress').setAttribute('aria-label',`第${n+1}步，共4步`);}
 function render(){
+ if(location.hash==='#print-tests'){Quiz.renderPrint();window.scrollTo(0,0);return;}
+ if(location.hash==='#comprehensive'){Quiz.render(null);document.querySelector('#comprehensive').scrollIntoView();return;}
  if(location.hash==='#tests'&&Quiz.render(null)){window.scrollTo(0,0);return;}
- const testMatch=location.hash.match(/^#test\/(\d+-[12])$/);
+ const testMatch=location.hash.match(/^#test\/(\d+-[12]|final-[abc])$/);
  if(testMatch&&Quiz.render(testMatch[1])){window.scrollTo(0,0);return;}
  const match=location.hash.match(/^#lesson\/(\d+)$/);const l=match&&lessons.find(l=>l.number===Number(match[1]));
  if(l){renderLesson(l);window.scrollTo(0,0);return;}
@@ -72,4 +74,4 @@ function render(){
 document.querySelector('#close-viewer').addEventListener('click',()=>document.querySelector('#image-viewer').close());
 document.querySelector('#image-viewer').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close();});
 window.addEventListener('hashchange',()=>{if(lessons.length)render();});
-Promise.all(['course-data.json','tests-data.json'].map(url=>fetch(url).then(r=>{if(!r.ok)throw Error('load');return r.json()}))).then(([data,tests])=>{lessons=data;Quiz.init(tests);render();}).catch(()=>{document.querySelector('#course-map').innerHTML='<div class="load-error">课程暂时没有加载成功。<br><button class="secondary" onclick="location.reload()">重新加载</button></div>'});
+Promise.all(['course-data.json','tests-data.json','print-tests-data.json'].map(url=>fetch(url).then(r=>{if(!r.ok)throw Error('load');return r.json()}))).then(([data,tests,images])=>{lessons=data;Quiz.init(tests,images);render();}).catch(()=>{document.querySelector('#course-map').innerHTML='<div class="load-error">课程暂时没有加载成功。<br><button class="secondary" onclick="location.reload()">重新加载</button></div>'});
