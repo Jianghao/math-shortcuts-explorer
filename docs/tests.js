@@ -1,6 +1,42 @@
 const Quiz = (() => {
   let papers=[],worksheets=[];
   const attempts=new Map();
+  function createStopwatch(now=()=>performance.now()){
+    let total=0,started=null;
+    return {
+      resume(){if(started===null)started=now();},
+      pause(){if(started!==null){total+=Math.max(0,now()-started);started=null;}},
+      elapsed(){return total+(started===null?0:Math.max(0,now()-started));}
+    };
+  }
+  function formatElapsed(ms){
+    const seconds=Math.floor(Math.max(0,ms)/1000),hours=Math.floor(seconds/3600);
+    const minutes=Math.floor(seconds/60)%60,rest=seconds%60;
+    return hours?`${hours}:${String(minutes).padStart(2,'0')}:${String(rest).padStart(2,'0')}`:`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(rest).padStart(2,'0')}`;
+  }
+  let activeAttempt=null,timerInterval=null;
+  function leave(){
+    if(activeAttempt)activeAttempt.clock.pause();
+    if(timerInterval!==null)clearInterval(timerInterval);
+    activeAttempt=null;timerInterval=null;
+  }
+  function updateTimer(){
+    if(!activeAttempt)return;
+    const display=document.querySelector('#test-clock');
+    if(display)display.textContent=formatElapsed(activeAttempt.clock.elapsed());
+    const status=document.querySelector('#timer-status');
+    if(status)status.textContent=document.hidden?'已暂停':'正在探索';
+  }
+  function startTiming(attempt){
+    activeAttempt=attempt;
+    if(!document.hidden)attempt.clock.resume();
+    updateTimer();timerInterval=setInterval(updateTimer,500);
+  }
+  if(typeof document!=='undefined')document.addEventListener('visibilitychange',()=>{
+    if(!activeAttempt)return;
+    if(document.hidden)activeAttempt.clock.pause();else activeAttempt.clock.resume();
+    updateTimer();
+  });
   function parseAnswer(raw){
     const normalized=String(raw??'').trim().replace(/[０-９]/g,c=>String(c.charCodeAt(0)-65296)).replace(/．/g,'.').replace(/−/g,'-');
     if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized))return null;
@@ -30,28 +66,30 @@ const Quiz = (() => {
     return `<section class="courses printable-hub" id="print-tests"><div class="section-title"><div class="eyebrow">PENCIL & PAPER TIME</div><h2>可打印的简单测试题</h2><p>拿出铅笔，在纸上慢慢算。7张原始图文试卷，按A4整页打印。</p><a class="primary" href="print-tests.html?sheet=all" target="_blank" rel="noopener">打印全部7张</a></div><div class="worksheet-grid">${worksheets.map((w,i)=>`<article class="worksheet-card"><a href="${w.src}" target="_blank" rel="noopener" aria-label="查看${w.name}原图"><img src="${w.src}" alt="${w.name}原始图文测试题" width="${w.width}" height="${w.height}" loading="lazy"></a><div class="worksheet-info"><h3>${w.name}</h3><div><a class="secondary" href="print-tests.html?sheet=${i}" target="_blank" rel="noopener">打印这一张</a><a class="worksheet-download" href="${w.src}" download>下载原图</a></div></div></article>`).join('')}</div></section>`;
   }
   function renderPrint(){document.querySelector('#main').innerHTML=`<div class="lesson-page"><nav class="breadcrumb"><a href="#tests">综合测试</a> / 可打印试卷</nav>${printCatalog()}</div>`;document.title='可打印的简单测试题 · 巧算探索站';}
-  function state(p){if(!attempts.has(p.id))attempts.set(p.id,{answers:Array(p.questions.length).fill(''),submitted:false});return attempts.get(p.id);}
+  function state(p){if(!attempts.has(p.id))attempts.set(p.id,{answers:Array(p.questions.length).fill(''),submitted:false,clock:createStopwatch()});return attempts.get(p.id);}
   function results(p,s){
     const points=100/p.questions.length;const graded=grade(p.questions,s.answers),correct=graded.filter(r=>r.correct).length,blank=graded.filter(r=>r.blank).length;
-    return `<section class="test-result" id="test-result" tabindex="-1" aria-label="测试结果"><div class="score-circle"><strong>${correct*points}</strong><span>分 / 100</span></div><div><span class="eyebrow">这次的小收获</span><h2>${correct===p.questions.length?'全部答对，巧算方法用得真棒！':correct/p.questions.length>=0.7?'已经掌握不少方法，再练练这几题！':'一步一步来，看看解析再试一次！'}</h2><p>答对${correct}题 · ${blank?`未作答${blank}题 · `:''}每题${points}分。下方可以查看答案与解析。</p><button class="secondary" type="button" id="retry-test">重新做这套题</button></div></section>`;
+    return `<section class="test-result" id="test-result" tabindex="-1" aria-label="测试结果"><div class="score-circle"><strong>${correct*points}</strong><span>分 / 100</span></div><div><span class="eyebrow">这次的小收获</span><h2>${correct===p.questions.length?'全部答对，巧算方法用得真棒！':correct/p.questions.length>=0.7?'已经掌握不少方法，再练练这几题！':'一步一步来，看看解析再试一次！'}</h2><p>答对${correct}题 · ${blank?`未作答${blank}题 · `:''}每题${points}分。下方可以查看答案与解析。</p><p class="result-time">⏱ 本次用时 <strong>${formatElapsed(s.clock.elapsed())}</strong> · 认真思考也是进步！</p><button class="secondary" type="button" id="retry-test">重新做这套题</button></div></section>`;
   }
   function render(id){
+    leave();
     if(id===null){document.querySelector('#main').innerHTML=`<div class="lesson-page"><nav class="breadcrumb"><a href="#courses">探索地图</a> / 综合测试</nav>${catalog()}</div>`;document.title='综合测试 · 巧算探索站';return true;}
     const p=papers.find(p=>p.id===id);if(!p)return false;
     const s=state(p),graded=s.submitted?grade(p.questions,s.answers):null;
     document.title=`${range(p)} ${label(p)} · 巧算探索站`;
-    document.querySelector('#main').innerHTML=`<article class="lesson-page test-paper"><nav class="breadcrumb" aria-label="面包屑"><a href="#courses">探索地图</a> / <a href="#tests">综合测试</a> / ${range(p)}</nav><header class="lesson-heading" style="--tint:${p.level===1?'#ecfaf0':'#f1eeff'}"><div class="eyebrow">${p.comprehensive?'全课程综合测试':'第'+p.group+'站'} · ${range(p)}</div><h1>${label(p)}</h1><p>一共${p.questions.length}题，每题${100/p.questions.length}分。先独立计算，只填数字，不用写单位；余数题请看清要填“商”还是“余数”。不计时，慢慢想。</p><div class="test-meta"><span>覆盖${range(p)}</span><span>满分100分</span><span id="test-progress">已填写${s.answers.filter(v=>v.trim()).length} / ${p.questions.length}题</span></div></header>${s.submitted?results(p,s):''}<form id="test-form" novalidate><div class="test-questions">${p.questions.map((q,i)=>`<section class="test-question ${graded?(graded[i].correct?'is-correct':'is-incorrect'):''}"><div class="question-heading"><span class="question-number">${String(i+1).padStart(2,'0')}</span><span class="question-topic">第${q.lesson}课 · ${escapeHTML(lessons[q.lesson-1].title)}</span>${graded?`<strong class="question-mark">${graded[i].correct?'✓ 答对了':graded[i].blank?'未作答':'再练练'}</strong>`:''}</div><label for="test-answer-${i}" class="question-prompt">${escapeHTML(q.prompt)}</label><input class="test-answer" id="test-answer-${i}" name="answer-${i}" data-question="${i}" inputmode="decimal" autocomplete="off" placeholder="你的答案" aria-label="第${i+1}题：${escapeHTML(q.prompt)}" value="${escapeHTML(s.answers[i])}" ${s.submitted?'readonly':''}>${graded?`<div class="question-review"><p>正确答案：<strong>${escapeHTML(q.answer)}</strong></p><details ${graded[i].correct?'':'open'}><summary>查看巧算解析</summary><p>${escapeHTML(q.explanation)}</p><a href="#lesson/${q.lesson}">复习第${q.lesson}课</a></details></div>`:''}</section>`).join('')}</div>${s.submitted?'<div class="test-submit"><a class="primary" href="#tests">回到综合测试</a></div>':'<div class="test-submit"><p>检查一下，有没有漏题？交卷后就能看答案和解析。</p><button class="primary" type="submit">交卷，看看我的收获</button></div>'}</form></article>`;
+    document.querySelector('#main').innerHTML=`<article class="lesson-page test-paper"><nav class="breadcrumb" aria-label="面包屑"><a href="#courses">探索地图</a> / <a href="#tests">综合测试</a> / ${range(p)}</nav><header class="lesson-heading" style="--tint:${p.level===1?'#ecfaf0':'#f1eeff'}"><div class="eyebrow">${p.comprehensive?'全课程综合测试':'第'+p.group+'站'} · ${range(p)}</div><h1>${label(p)}</h1><p>一共${p.questions.length}题，每题${100/p.questions.length}分。先独立计算，只填数字，不用写单位；余数题请看清要填“商”还是“余数”。小秒表会记录答题用时，没有时间限制。离开试卷或切到后台时暂停，回来继续。</p><div class="test-meta"><span>覆盖${range(p)}</span><span>满分100分</span><span id="test-progress">已填写${s.answers.filter(v=>v.trim()).length} / ${p.questions.length}题</span></div></header><div class="test-timer ${s.submitted?'timer-finished':''}"><span class="timer-symbol" aria-hidden="true">⏱</span><div><span class="timer-label">${s.submitted?'本次答题用时':'我的巧算小秒表'}</span><strong id="test-clock" role="timer" aria-label="答题用时">${formatElapsed(s.clock.elapsed())}</strong></div><span class="timer-status" id="timer-status">${s.submitted?'✦ 完成探索':'正在探索'}</span></div>${s.submitted?results(p,s):''}<form id="test-form" novalidate><div class="test-questions">${p.questions.map((q,i)=>`<section class="test-question ${graded?(graded[i].correct?'is-correct':'is-incorrect'):''}"><div class="question-heading"><span class="question-number">${String(i+1).padStart(2,'0')}</span><span class="question-topic">第${q.lesson}课 · ${escapeHTML(lessons[q.lesson-1].title)}</span>${graded?`<strong class="question-mark">${graded[i].correct?'✓ 答对了':graded[i].blank?'未作答':'再练练'}</strong>`:''}</div><label for="test-answer-${i}" class="question-prompt">${escapeHTML(q.prompt)}</label><input class="test-answer" id="test-answer-${i}" name="answer-${i}" data-question="${i}" inputmode="decimal" autocomplete="off" placeholder="你的答案" aria-label="第${i+1}题：${escapeHTML(q.prompt)}" value="${escapeHTML(s.answers[i])}" ${s.submitted?'readonly':''}>${graded?`<div class="question-review"><p>正确答案：<strong>${escapeHTML(q.answer)}</strong></p><details ${graded[i].correct?'':'open'}><summary>查看巧算解析</summary><p>${escapeHTML(q.explanation)}</p><a href="#lesson/${q.lesson}">复习第${q.lesson}课</a></details></div>`:''}</section>`).join('')}</div>${s.submitted?'<div class="test-submit"><a class="primary" href="#tests">回到综合测试</a></div>':'<div class="test-submit"><p>检查一下，有没有漏题？交卷后就能看答案和解析。</p><button class="primary" type="submit">交卷，看看我的收获</button></div>'}</form></article>`;
     if(s.submitted){document.querySelector('#retry-test').addEventListener('click',()=>{attempts.delete(id);render(id);window.scrollTo(0,0);});}
     else{
+      startTiming(s);
       document.querySelector('#test-form').addEventListener('input',e=>{
         if(!e.target.matches('[data-question]'))return;
         s.answers[Number(e.target.dataset.question)]=e.target.value;
         document.querySelector('#test-progress').textContent=`已填写${s.answers.filter(v=>v.trim()).length} / ${p.questions.length}题`;
       });
-      document.querySelector('#test-form').addEventListener('submit',e=>{e.preventDefault();s.submitted=true;render(id);document.querySelector('#test-result').focus();document.querySelector('#test-result').scrollIntoView({block:'start'});});
+      document.querySelector('#test-form').addEventListener('submit',e=>{e.preventDefault();leave();s.submitted=true;render(id);document.querySelector('#test-result').focus();document.querySelector('#test-result').scrollIntoView({block:'start'});});
     }
     return true;
   }
-  return {init,catalog,render,renderPrint,parseAnswer,grade};
+  return {init,catalog,render,renderPrint,parseAnswer,grade,leave,createStopwatch,formatElapsed};
 })();
-if(typeof module!=='undefined'&&module.exports)module.exports={parseAnswer:Quiz.parseAnswer,grade:Quiz.grade};
+if(typeof module!=='undefined'&&module.exports)module.exports={parseAnswer:Quiz.parseAnswer,grade:Quiz.grade,createStopwatch:Quiz.createStopwatch,formatElapsed:Quiz.formatElapsed};

@@ -62,6 +62,7 @@ function renderLesson(l){
 }
 function setStep(n){currentStep=n;const steps=walkthroughs[currentLesson.number-1];const expression=document.querySelector('#step-expression');expression.textContent=steps[n][0];expression.classList.remove('animate');void expression.offsetWidth;expression.classList.add('animate');document.querySelector('#step-note').textContent=steps[n][1];document.querySelector('#step-back').disabled=n===0;document.querySelector('#step-next').textContent=n===3?'再看一次':'下一步';document.querySelector('#step-progress').innerHTML=steps.map((_,i)=>`<span class="${i<=n?'active':''}"></span>`).join('');document.querySelector('#step-progress').setAttribute('aria-label',`第${n+1}步，共4步`);}
 function render(){
+ Quiz.leave();
  if(location.hash==='#print-tests'){Quiz.renderPrint();window.scrollTo(0,0);return;}
  if(location.hash==='#comprehensive'){Quiz.render(null);document.querySelector('#comprehensive').scrollIntoView();return;}
  if(location.hash==='#tests'&&Quiz.render(null)){window.scrollTo(0,0);return;}

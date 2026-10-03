@@ -1,6 +1,17 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const {parseAnswer,grade}=require('./docs/tests.js');
+const {parseAnswer,grade,createStopwatch,formatElapsed}=require('./docs/tests.js');
+let time=0;
+const clock=createStopwatch(()=>time);
+clock.resume();time=1500;assert.equal(clock.elapsed(),1500);
+clock.resume();time=2500;assert.equal(clock.elapsed(),2500);
+clock.pause();time=12000;assert.equal(clock.elapsed(),2500);
+clock.pause();clock.resume();time=13500;assert.equal(clock.elapsed(),4000);
+clock.pause();time=99999;assert.equal(clock.elapsed(),4000);
+assert.equal(createStopwatch(()=>time).elapsed(),0);
+assert.equal(formatElapsed(4000),'00:04');
+assert.equal(formatElapsed(61000),'01:01');
+assert.equal(formatElapsed(3601000),'1:00:01');
 assert.equal(parseAnswer(''),null);
 assert.equal(parseAnswer('   '),null);
 assert.equal(parseAnswer('Infinity'),null);

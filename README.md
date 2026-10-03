@@ -9,6 +9,7 @@ A static Chinese-language learning site for grades 3–4, based on the supplied 
 - Four-step worked examples and one optional extension exercise per lesson.
 - Seven review groups with two 10-question test papers each: 140 questions with scoring and explanations.
 - Full-course A/B/C papers with 25 questions each and increasing difficulty.
+- Automatic stopwatch for every online test; pauses off-page or in the background, freezes at submission and resets on retry.
 - Seven original image worksheets with individual or combined A4 printing and PNG downloads.
 - Responsive layout, keyboard navigation and reduced-motion support.
 
