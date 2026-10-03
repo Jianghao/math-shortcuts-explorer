@@ -26,7 +26,7 @@ for i,m in enumerate(matches):
     summaries=[s['content'].replace('**','').replace('`','') for s in sections if s['heading']=='总结']
     lessons.append({'number':number,'title':m[2].strip(),'module':0 if number<=4 else 1 if number<=18 else 2,'image':f'assets/lesson_{number:02d}.png','summary':summaries[0] if summaries else '', 'sections':sections})
 assert len(lessons)==20
-(root/'dist'/'course-data.json').write_text(json.dumps(lessons,ensure_ascii=False),encoding='utf-8')
+(root/'docs'/'course-data.json').write_text(json.dumps(lessons,ensure_ascii=False),encoding='utf-8')
 for name in ['cover.png']+[f'lesson_{i:02d}.png' for i in range(1,21)]:
-    shutil.copy2(source/name,root/'dist'/'assets'/name)
+    shutil.copy2(source/name,root/'docs'/'assets'/name)
 print('20 lessons and 21 original images ready')

@@ -11,10 +11,16 @@ A static Chinese-language learning site for grades 3–4, based on the supplied 
 
 ## Local preview
 
-Serve `dist` using any static HTTP server. For example: `python -m http.server 8765 --directory dist`.
+Serve `docs` using any static HTTP server. For example: `python -m http.server 8765 --directory docs`.
+
+## GitHub Pages
+
+The public repository is `Jianghao/math-shortcuts-explorer`. GitHub Pages publishes the `docs` directory from the `main` branch on every push. The website uses relative asset paths and works under the repository subdirectory.
+
+Edit `docs/course-data.json`, `docs/app.js`, or `docs/styles.css` to update the content, examples, or design. Original classroom PNGs are stored in `docs/assets` without changes.
 
 ## Content
 
-`prepare_content.py` imports lesson content from the parent directory and copies the original images without modification. `dist/course-data.json` contains the lesson text; `dist/app.js` contains the worked examples and extension exercises.
+`prepare_content.py` imports lesson content from the parent directory and copies the original images without modification. `docs/course-data.json` contains the lesson text; `docs/app.js` contains the worked examples and extension exercises.
 
 Lesson 3 corrects an error in the provided four-digit reversed-number example. The source image is preserved; the lesson includes an explicit correction. No accounts or server database are required for the learning interactions.
